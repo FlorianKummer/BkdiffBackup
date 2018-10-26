@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2041
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BckupKernel", "BckupKernel\BckupKernel.csproj", "{786C1981-5DB6-45F2-BB8A-B97CB188D5D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BckupApp", "BckupApp\BckupApp.csproj", "{5F42575B-4E62-4005-89B4-3BCDEBF79582}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackupDeamon", "BackupDeamon\BackupDeamon.csproj", "{3DC48033-9FDC-43BC-8550-6E74B13ACB6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{786C1981-5DB6-45F2-BB8A-B97CB188D5D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{786C1981-5DB6-45F2-BB8A-B97CB188D5D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{786C1981-5DB6-45F2-BB8A-B97CB188D5D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{786C1981-5DB6-45F2-BB8A-B97CB188D5D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F42575B-4E62-4005-89B4-3BCDEBF79582}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F42575B-4E62-4005-89B4-3BCDEBF79582}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F42575B-4E62-4005-89B4-3BCDEBF79582}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F42575B-4E62-4005-89B4-3BCDEBF79582}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DC48033-9FDC-43BC-8550-6E74B13ACB6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DC48033-9FDC-43BC-8550-6E74B13ACB6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DC48033-9FDC-43BC-8550-6E74B13ACB6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DC48033-9FDC-43BC-8550-6E74B13ACB6D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B7B5B746-F98E-441A-B76C-B42FBB0C16B2}
+	EndGlobalSection
+EndGlobal
