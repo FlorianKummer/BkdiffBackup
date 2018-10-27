@@ -16,7 +16,9 @@ namespace BckupKernel {
             "*\\Users\\*\\AppData\\Local",
             "*\\Users\\*\\AppData\\LocalLow",
             "$Recycle.Bin",
-            "ntuser.dat*"
+            "ntuser.dat*",
+            "desktop.ini",
+            "thumbs.db"
         };
 
         private static Regex WildcardToRegex(string pattern) {
@@ -134,7 +136,7 @@ namespace BckupKernel {
             string[] _BlackList;
             if(File.Exists(blk)) {
                 try {
-                    _BlackList = File.ReadAllLines(inc);
+                    _BlackList = File.ReadAllLines(blk);
                 } catch(Exception e) {
                     Console.WriteLine(e.GetType().Name + " during reading black-list '" + inc + "'");
                     _BlackList = new string[0];

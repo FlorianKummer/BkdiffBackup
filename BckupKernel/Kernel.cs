@@ -26,15 +26,12 @@ namespace BckupKernel
             SyncDirsRecursive(SourcePath, MirrorPath, BackDiffPath, new string[0]);
         }
 
-        
-
         static string[] Cat1(this string[] a, string b) {
             string[] R = new string[a.Length + 1];
             Array.Copy(a, R, a.Length);
             R[a.Length] = b;
             return R;
         }
-
         
         static void SyncDirsRecursive(string SourceDir, string MirrorDir, string BackDiffDir, string[] RelPath) {
             if (!Directory.Exists(SourceDir))
@@ -125,7 +122,7 @@ namespace BckupKernel
                     BackDiffCreated = true;
                 }
 
-                Directory.Move(s, SubBackDiffDir);
+                SaveDirectoryMove(s, SubBackDiffDir);
             }
         }
 
@@ -190,10 +187,10 @@ namespace BckupKernel
                     string MirrorFile = MirrorFiles[idxFound];
 
                     bool WriteTimeOk = (File.GetLastWriteTimeUtc(MirrorFile) == File.GetLastWriteTimeUtc(srcFile));
-                    bool AttributesOk = (File.GetAttributes(MirrorFile) == File.GetAttributes(srcFile));
+                    //bool AttributesOk = (File.GetAttributes(MirrorFile) == File.GetAttributes(srcFile));
                     bool SizeOk = (new FileInfo(MirrorFile)).Length == (new FileInfo(srcFile)).Length;
 
-                    if (WriteTimeOk && AttributesOk && SizeOk) {
+                    if (WriteTimeOk && SizeOk) {
                         // ++++++++++++++++++++++++++++++++++++++++++++++++++
                         // file exists in mirror, equal size => Nothing to do
                         // ++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -249,6 +246,9 @@ namespace BckupKernel
         }
 
         private static void SaveMove(string MirrorFile, string BkdiffName) {
+            //if (Path.GetFileName(MirrorFile) == "Dopamine 1.5.12.0.msi")
+            //    Console.Write(".");
+
             try {
                                 
                 FileSecurity ac1 = File.GetAccessControl(MirrorFile);
@@ -262,6 +262,26 @@ namespace BckupKernel
                 // try to set security
                 ac1.SetAccessRuleProtection(true, true);
                 File.SetAccessControl(BkdiffName, ac1);
+
+            } catch (Exception e) {
+                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+            }
+        }
+
+        private static void SaveDirectoryMove(string MirrorFile, string BkdiffName) {
+            try {
+                                
+                DirectorySecurity ac1 = Directory.GetAccessControl(MirrorFile);
+                Directory.Move(MirrorFile, BkdiffName);
+                //FileInfo BackdiffFile = new FileInfo(BkdiffName);
+
+                // test copy
+                if (!Directory.Exists(BkdiffName))
+                    throw new BackupException("Directory move Failed", new DirectoryInfo(BkdiffName));
+
+                // try to set security
+                ac1.SetAccessRuleProtection(true, true);
+                Directory.SetAccessControl(BkdiffName, ac1);
 
             } catch (Exception e) {
                 Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
