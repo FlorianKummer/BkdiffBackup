@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BckupKernel
@@ -25,6 +26,8 @@ namespace BckupKernel
             SyncDirsRecursive(SourcePath, MirrorPath, BackDiffPath, new string[0]);
         }
 
+        
+
         static string[] Cat1(this string[] a, string b) {
             string[] R = new string[a.Length + 1];
             Array.Copy(a, R, a.Length);
@@ -32,9 +35,12 @@ namespace BckupKernel
             return R;
         }
 
+        
         static void SyncDirsRecursive(string SourceDir, string MirrorDir, string BackDiffDir, string[] RelPath) {
             if (!Directory.Exists(SourceDir))
                 throw new ArgumentException("source directory does not exist");
+
+            Filter filter = new Filter(SourceDir);
             
             //string DirName = (new DirectoryInfo(SourceDir)).Name;
 
@@ -62,11 +68,28 @@ namespace BckupKernel
             }
 
             // sync files
-            SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath);
-            
-            string[] SourceDirs = Directory.GetDirectories(SourceDir); // files in the source directory
-            string[] MirrorDirs = Directory.GetDirectories(MirrorDir); // files already present in the mirror directory
+            SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath, filter);
 
+            string[] SourceDirs; 
+            try { 
+                SourceDirs = Directory.GetDirectories(SourceDir); // files in the source directory
+            } catch(Exception e) {
+                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                SourceDirs = new string[0];
+            }
+                                 
+            string[] MirrorDirs;
+            try {
+                MirrorDirs = Directory.GetDirectories(MirrorDir); // files already present in the mirror directory
+            } catch (Exception e) {
+                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                MirrorDirs = new string[0];
+            }
+
+            // filter source dirs
+            SourceDirs = SourceDirs.Where(dn => filter.FilterItem(dn) == false).ToArray();
+
+            
             // recursion
             foreach(string s in SourceDirs) {
                 string SubDirName = Path.GetFileName(s);
@@ -107,19 +130,22 @@ namespace BckupKernel
         }
 
 
-        static void SyncFilesInDir(string SourceDir, string MirrorDir, string BkdiffDir, string[] RelPath) {
+        static void SyncFilesInDir(string SourceDir, string MirrorDir, string BkdiffDir, string[] RelPath, Filter filter) {
            
             if (!Directory.Exists(SourceDir))
                 throw new ArgumentException();
             if (!Directory.Exists(MirrorDir))
                 throw new ArgumentException("Mirror directory does not exist.");
 
+            // ==============
+            // get file list
+            // ==============
             string[] SourceFiles;
             try {
                 SourceFiles = Directory.GetFiles(SourceDir); // files in the source directory
             } catch(Exception e) {
                 Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
-                SourceFiles = null;
+                SourceFiles = new string[0];
             }
 
 
@@ -131,6 +157,9 @@ namespace BckupKernel
                 MirrorFiles = new string[0];
             }
 
+            // filter source dirs
+            SourceFiles = SourceFiles.Where(dn => filter.FilterItem(dn) == false).ToArray();
+            
             bool BackDiffCreated = Directory.Exists(BkdiffDir);
 
             // ===============================
