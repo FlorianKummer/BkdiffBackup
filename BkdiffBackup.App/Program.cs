@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace BckupApp {
+namespace BkdiffBackup {
     static class Program {
 
 
@@ -28,7 +28,7 @@ namespace BckupApp {
             }
 
 
-            BckupKernel.Kernel.Execute(SourcePath, MirrorPath, BkDiffPath);
+            Kernel.Execute(SourcePath, MirrorPath, BkDiffPath);
 
 
         }

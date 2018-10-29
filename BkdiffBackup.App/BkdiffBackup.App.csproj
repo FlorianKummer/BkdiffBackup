@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{5F42575B-4E62-4005-89B4-3BCDEBF79582}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>BckupApp</RootNamespace>
-    <AssemblyName>BckupApp</AssemblyName>
+    <RootNamespace>BkdiffBackup</RootNamespace>
+    <AssemblyName>BkdiffBackup.App</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -50,9 +50,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BckupKernel\BckupKernel.csproj">
+    <ProjectReference Include="..\BckupKernel\BkdiffBackup.Kernel.csproj">
       <Project>{786c1981-5db6-45f2-bb8a-b97cb188d5d5}</Project>
-      <Name>BckupKernel</Name>
+      <Name>BkdiffBackup.Kernel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
