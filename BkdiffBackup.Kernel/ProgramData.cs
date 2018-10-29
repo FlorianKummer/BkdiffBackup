@@ -16,9 +16,10 @@ namespace BkdiffBackup {
         /// </summary>
         public static Configuration CurrentConfiguration {
             get;
-            private set;
+            set;
         }
 
+        /*
         static ProgramData() {
             if(File.Exists(FullconfigFilePath)) {
                 ReloadConfiguration();
@@ -33,7 +34,7 @@ namespace BkdiffBackup {
                 SaveConfiguration();
             }
         }
-
+        */
 
         public static string GetProgramDataDir() {
             string dir = System.Environment.GetEnvironmentVariable("ProgramData");
@@ -56,6 +57,15 @@ namespace BkdiffBackup {
         public static string FullconfigFilePath {
             get {
                 return Path.Combine(GetProgramDataDir(), ConfigFileName);
+            }
+        }
+
+        /// <summary>
+        /// true, if the config file exists.
+        /// </summary>
+        public static bool ConfigfileExists {
+            get {
+                return File.Exists(FullconfigFilePath);
             }
         }
 

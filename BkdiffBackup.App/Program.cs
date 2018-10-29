@@ -12,32 +12,36 @@ namespace BkdiffBackup {
 
 
         static void Main(string[] args) {
-            /*
-            string SourcePath = @"C:\Users\florian";
 
-            string TargetPath = @"D:\bkup";
-            string DateString = DateTime.Now.ToString("yyyy-MMM-dd--HH-mm-ss");
+            if (ProgramData.ConfigfileExists) {
+                ProgramData.ReloadConfiguration();
 
-            string MirrorPath = Path.Combine(TargetPath, "mirror");
-            string BkDiffPath = Path.Combine(TargetPath, "bkdiff-" + DateString);
+                foreach (var c in ProgramData.CurrentConfiguration.Directories) {
+                    try {
+                        Console.WriteLine(string.Format("Running backup {0} -> {1} ...", c.DirectoryToBackup, c.MirrorLocation));
+                        Kernel.RunFromConfig(c);
+                        Console.WriteLine("done.");
+                    } catch (Exception e) {
+                        Console.Error.WriteLine("SERIOUS EXCEPTION - BACKUP INCOMPLETE: " + e.GetType().Name + ": " + e.Message);
 
-            if (!Directory.Exists(MirrorPath)) {
-                Directory.CreateDirectory(MirrorPath);
+                    }
+                }
+
+            } else {
+                ProgramData.CurrentConfiguration = new Configuration();
+                ProgramData.CurrentConfiguration.Directories = new Configuration.BkupDir[] {
+                    new Configuration.BkupDir() {
+                        DirectoryToBackup = "C:\\Users",
+                        MirrorLocation = "Specify-mirror-here"
+                    }
+                };
+                ProgramData.SaveConfiguration();
+
+                Console.WriteLine("Created dummy configuration file '{0}'.", ProgramData.FullconfigFilePath);
+                Console.WriteLine("Enter valid configuration and run again.");
             }
-            if (!Directory.Exists(BkDiffPath)) {
-                Directory.CreateDirectory(BkDiffPath);
-            }
+            
 
-            BkdiffBackup.ProgramData.SaveConfiguration();
-
-
-
-            Kernel.Execute(SourcePath, MirrorPath, BkDiffPath);
-            */
-
-            foreach(var c in ProgramData.CurrentConfiguration.Directories) {
-                Kernel.RunFromConfig(c);
-            }
 
 
         }

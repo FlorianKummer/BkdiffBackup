@@ -46,12 +46,15 @@ namespace BkdiffBackup {
         }
         
         void InfinityLoop() {
-            DateTime next = ProgramData.CurrentConfiguration.GetNextOccurence();
-            Logmsg("Next backup scheduled for: " + next);
 
             while (true) {
+                DateTime next = ProgramData.CurrentConfiguration.GetNextOccurence();
+                Logmsg("Next backup scheduled for: " + next);
+
                 int Sleeptime = (int)Math.Round((next - DateTime.Now).TotalMilliseconds);
-                Logmsg("Going to sleep for " + (Sleeptime / 1000) + "seconds...");
+                Sleeptime = Math.Min(Sleeptime, 1000);
+                Logmsg("Going to sleep for " + (Sleeptime / 1000) + " seconds...");
+
                 Thread.Sleep(Sleeptime);
                 Logmsg("wakeup");
 
