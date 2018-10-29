@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using NCrontab;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,10 +41,31 @@ namespace BkdiffBackup {
         }
 
         /// <summary>
+        /// CRON string for backup schedule; Default is every day at midnight
+        /// </summary>
+        public string CronScheduleString = "0 0 * * *";
+
+        /// <summary>
+        /// Next time at which the backup should run
+        /// </summary>
+        public DateTime GetNextOccurence() {
+            try {
+                CrontabSchedule schedule = CrontabSchedule.Parse(CronScheduleString);
+                DateTime R = schedule.GetNextOccurrence(DateTime.Now);
+                return R;
+            } catch (Exception e) {
+                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                return DateTime.Now.AddMinutes(1);
+            }
+        }
+
+
+        /// <summary>
         /// All directories which should be back-uped
         /// </summary>
         public BkupDir[] Directories = new BkupDir[0];
 
+        
 
         /// <summary>
         /// Used for control objects in work-flow management, 

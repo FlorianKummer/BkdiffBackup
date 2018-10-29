@@ -56,5 +56,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BkdiffBackup.Kernel\BkdiffBackup.Kernel.csproj">
+      <Project>{786c1981-5db6-45f2-bb8a-b97cb188d5d5}</Project>
+      <Name>BkdiffBackup.Kernel</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

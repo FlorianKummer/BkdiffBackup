@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BkdiffBackup {
@@ -14,11 +16,56 @@ namespace BkdiffBackup {
             InitializeComponent();
         }
 
-        protected override void OnStart(string[] args) {
+        TextWriter log;
 
+        void Logmsg(string s) {
+            log.Write(DateTime.Now);
+            log.Write(": ");
+            log.Write(s);
+            log.WriteLine();
+            log.Flush();
+        }
+
+        Thread bkground;
+
+        protected override void OnStart(string[] args) {
+            string DeamonFile = Path.Combine(ProgramData.GetProgramDataDir(), "deamon-log.txt");
+            log = new StreamWriter(DeamonFile, true);
+            Logmsg("BkdiffBackup deamon started...");
+
+            bkground = new Thread(InfinityLoop);
+            bkground.Start();
         }
 
         protected override void OnStop() {
+            if(log != null) {
+                Logmsg("BkdiffBackup deamon stopped");
+                log.Flush();
+                log.Close();
+            }
+        }
+        
+        void InfinityLoop() {
+            DateTime next = ProgramData.CurrentConfiguration.GetNextOccurence();
+            Logmsg("Next backup scheduled for: " + next);
+
+            while (true) {
+                int Sleeptime = (int)Math.Round((next - DateTime.Now).TotalMilliseconds);
+                Logmsg("Going to sleep for " + (Sleeptime / 1000) + "seconds...");
+                Thread.Sleep(Sleeptime);
+                Logmsg("wakeup");
+
+                foreach (var c in ProgramData.CurrentConfiguration.Directories) {
+                    try {
+                        Logmsg(string.Format("Running backup {0} -> {1} ...", c.DirectoryToBackup, c.MirrorLocation));
+                        Kernel.RunFromConfig(c);
+                        Logmsg("done.");
+                    } catch (Exception e) {
+                        Logmsg("SERIOUS EXCEPTION - BACKUP INCOMPLETE: " + e.GetType().Name + ": " + e.Message);
+
+                    }
+                }
+            }
         }
     }
 }
