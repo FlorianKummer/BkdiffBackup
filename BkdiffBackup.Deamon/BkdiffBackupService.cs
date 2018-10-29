@@ -8,13 +8,14 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BackupDeamon {
-    public partial class Service1 : ServiceBase {
-        public Service1() {
+namespace BkdiffBackup {
+    public partial class BkdiffBackupService : ServiceBase {
+        public BkdiffBackupService() {
             InitializeComponent();
         }
 
         protected override void OnStart(string[] args) {
+
         }
 
         protected override void OnStop() {

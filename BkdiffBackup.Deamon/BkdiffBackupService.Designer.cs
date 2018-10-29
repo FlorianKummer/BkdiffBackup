@@ -1,5 +1,5 @@
-﻿namespace BackupDeamon {
-    partial class Service1 {
+﻿namespace BkdiffBackup {
+    partial class BkdiffBackupService {
         /// <summary> 
         /// Required designer variable.
         /// </summary>
