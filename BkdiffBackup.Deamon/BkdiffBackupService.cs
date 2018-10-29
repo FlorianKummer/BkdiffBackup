@@ -32,6 +32,19 @@ namespace BkdiffBackup {
             string DeamonFile = Path.Combine(ProgramData.GetProgramDataDir(), "deamon-log.txt");
             log = new StreamWriter(DeamonFile, true);
             Logmsg("BkdiffBackup deamon started...");
+            try {
+                Logmsg("loading configuration...");
+                ProgramData.ReloadConfiguration();
+                Logmsg("success.");
+                foreach (var c in ProgramData.CurrentConfiguration.Directories) {
+                    Logmsg(string.Format("backup job '{0}' -> '{1}' ...", c.DirectoryToBackup, c.MirrorLocation));
+                }
+
+            } catch(Exception e) {
+                Logmsg("SERIOUS EXCEPTION - LOADING CONFIGURATION: " + e.GetType().Name + ": '" + e.Message + "' Stacktrace: " + e.StackTrace);
+                Logmsg("TERMINATING SERVICE.");
+                base.Stop();
+            }
 
             bkground = new Thread(InfinityLoop);
             bkground.Start();
@@ -52,7 +65,7 @@ namespace BkdiffBackup {
                 Logmsg("Next backup scheduled for: " + next);
 
                 int Sleeptime = (int)Math.Round((next - DateTime.Now).TotalMilliseconds);
-                Sleeptime = Math.Min(Sleeptime, 1000);
+                Sleeptime = Math.Max(Sleeptime, 1000);
                 Logmsg("Going to sleep for " + (Sleeptime / 1000) + " seconds...");
 
                 Thread.Sleep(Sleeptime);
@@ -60,12 +73,11 @@ namespace BkdiffBackup {
 
                 foreach (var c in ProgramData.CurrentConfiguration.Directories) {
                     try {
-                        Logmsg(string.Format("Running backup {0} -> {1} ...", c.DirectoryToBackup, c.MirrorLocation));
+                        Logmsg(string.Format("Running backup '{0}' -> '{1}' ...", c.DirectoryToBackup, c.MirrorLocation));
                         Kernel.RunFromConfig(c);
-                        Logmsg("done.");
+                        Logmsg("success.");
                     } catch (Exception e) {
-                        Logmsg("SERIOUS EXCEPTION - BACKUP INCOMPLETE: " + e.GetType().Name + ": " + e.Message);
-
+                        Logmsg("SERIOUS EXCEPTION - BACKUP INCOMPLETE: " + e.GetType().Name + ": '" + e.Message + "' Stacktrace: " + e.StackTrace);
                     }
                 }
             }

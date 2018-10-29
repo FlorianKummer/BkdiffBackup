@@ -118,14 +118,14 @@ namespace BkdiffBackup {
         /// Constructor: reads local include, resp. black-lists.
         /// </summary>
         /// <param name="Directory"></param>
-        public Filter(string Directory) {
+        public Filter(string Directory, TextWriter errLog) {
             string inc = Path.Combine(Directory, INCLUDE_LIST_NAME);
 
             if(File.Exists(inc)) {
                 try {
                     IncludeList = File.ReadAllLines(inc);
                 } catch(Exception e) {
-                    Console.WriteLine(e.GetType().Name + " during reading include list '" + inc + "'");
+                    errLog.WriteLine(e.GetType().Name + " during reading include list '" + inc + "'");
                     IncludeList = null;
                 } 
             } else {
@@ -138,7 +138,7 @@ namespace BkdiffBackup {
                 try {
                     _BlackList = File.ReadAllLines(blk);
                 } catch(Exception e) {
-                    Console.WriteLine(e.GetType().Name + " during reading black-list '" + inc + "'");
+                    errLog.WriteLine(e.GetType().Name + " during reading black-list '" + inc + "'");
                     _BlackList = new string[0];
                 } 
             } else {

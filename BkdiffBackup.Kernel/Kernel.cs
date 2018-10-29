@@ -74,13 +74,16 @@ namespace BkdiffBackup
             return R;
         }
         
-        static void SyncDirsRecursive(string SourceDir, string MirrorDir, string BackDiffDir, string[] RelPath, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
-            if (!Directory.Exists(SourceDir))
-                throw new ArgumentException("source directory does not exist");
+        static bool SyncDirsRecursive(string SourceDir, string MirrorDir, string BackDiffDir, string[] RelPath, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
+            if (!Directory.Exists(SourceDir)) {
+                if (RelPath.Length == 0)
+                    throw new ArgumentException("source directory does not exist");
+                else 
+                    return false;
+            }
 
-            Filter filter = new Filter(SourceDir);
+            Filter filter = new Filter(SourceDir, errLog);
            
-
             if (!Directory.Exists(MirrorDir)) {
                 // +++++++++++++++++++++++
                 // create mirror directory
@@ -139,11 +142,12 @@ namespace BkdiffBackup
                         break;
                     }
                 }
-                if(idxFound >= 0) {
+                if (idxFound >= 0) {
                     MirrorDirs[idxFound] = null;
                 }
 
-                SyncDirsRecursive(s, Path.Combine(MirrorDir, SubDirName), Path.Combine(BackDiffDir, SubDirName), Cat1( RelPath, SubDirName), log, errLog, LogFileList, CopyAccessControlLists);
+                bool succ = SyncDirsRecursive(s, Path.Combine(MirrorDir, SubDirName), Path.Combine(BackDiffDir, SubDirName), Cat1( RelPath, SubDirName), log, errLog, LogFileList, CopyAccessControlLists);
+                
             }
 
             // move un-matched directories in mirror to backdiff
@@ -161,6 +165,8 @@ namespace BkdiffBackup
 
                 SaveDirectoryMove(s, SubBackDiffDir, log, errLog, LogFileList, CopyAccessControlLists);
             }
+
+            return true;
         }
 
 
@@ -266,6 +272,12 @@ namespace BkdiffBackup
             // ==========================================
             // move untouched files in mirror to backdiff
             // ==========================================
+
+            //
+            // the remaining mirror files cannot be related to any file in the source directory
+            // it seems they were deleted in the source directory by the user
+            // -> move them to the backdiff
+            //
 
             for (int iTarg = 0; iTarg < MirrorFiles.Length; iTarg++) {
                 if (MirrorFiles[iTarg] == null)
