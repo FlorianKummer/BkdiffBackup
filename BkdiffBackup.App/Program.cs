@@ -12,6 +12,7 @@ namespace BkdiffBackup {
 
 
         static void Main(string[] args) {
+            /*
             string SourcePath = @"C:\Users\florian";
 
             string TargetPath = @"D:\bkup";
@@ -27,8 +28,16 @@ namespace BkdiffBackup {
                 Directory.CreateDirectory(BkDiffPath);
             }
 
+            BkdiffBackup.ProgramData.SaveConfiguration();
+
+
 
             Kernel.Execute(SourcePath, MirrorPath, BkDiffPath);
+            */
+
+            foreach(var c in ProgramData.CurrentConfiguration.Directories) {
+                Kernel.RunFromConfig(c);
+            }
 
 
         }

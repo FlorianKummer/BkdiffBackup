@@ -12,7 +12,7 @@ namespace BkdiffBackup
 {
     static public class Kernel {
 
-        public static void Execute(
+        public static void RunNow(
             string SourcePath,
             string MirrorPath,
             string BackDiffPath) {
@@ -23,28 +23,63 @@ namespace BkdiffBackup
             if (!Directory.Exists(BackDiffPath))
                 throw new ArgumentException();
 
-            SyncDirsRecursive(SourcePath, MirrorPath, BackDiffPath, new string[0]);
+            SyncDirsRecursive(SourcePath, MirrorPath, BackDiffPath, new string[0], System.Console.Out, System.Console.Error, false, true);
         }
 
-        static string[] Cat1(this string[] a, string b) {
+
+        static public void RunFromConfig(Configuration.BkupDir c) {
+
+            string SourcePath = c.DirectoryToBackup;
+            if (!Directory.Exists(SourcePath))
+                throw new ArgumentException();
+
+
+            string MirrorPath = c.MirrorLocation;
+            
+            if (!Directory.Exists(MirrorPath)) {
+                Directory.CreateDirectory(MirrorPath);
+            }
+
+            string BkDiffPath = MirrorPath;
+            if (BkDiffPath.EndsWith("/") || BkDiffPath.EndsWith("\\"))
+                BkDiffPath = Path.GetDirectoryName(BkDiffPath);
+
+            string DateString = DateTime.Now.ToString("yyyy-MMM-dd--HH-mm-ss");
+            string LogBaseName = BkDiffPath;
+            BkDiffPath = BkDiffPath + "-bkdiff-" + DateString;
+
+            string InfoLogPath = (LogBaseName + "-" + DateString + "-Info.txt");
+            string ErrLogPath = (LogBaseName + "-" + DateString + "-Err.txt");
+            
+            if (Directory.Exists(BkDiffPath)) {
+                throw new IOException("bkdiff dir already exists: '" + BkDiffPath + "'");
+            } else {
+                Directory.CreateDirectory(BkDiffPath);
+            }
+
+            using (TextWriter log = new StreamWriter(InfoLogPath), errLog = new StreamWriter(ErrLogPath)) {
+
+                SyncDirsRecursive(SourcePath, MirrorPath, BkDiffPath, new string[0], log, errLog, c.LogFileList, c.CopyAccessControlLists);
+                log.Flush();
+                errLog.Flush();
+            }
+        }
+
+
+
+        static string[] Cat1(string[] a, string b) {
             string[] R = new string[a.Length + 1];
             Array.Copy(a, R, a.Length);
             R[a.Length] = b;
             return R;
         }
         
-        static void SyncDirsRecursive(string SourceDir, string MirrorDir, string BackDiffDir, string[] RelPath) {
+        static void SyncDirsRecursive(string SourceDir, string MirrorDir, string BackDiffDir, string[] RelPath, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
             if (!Directory.Exists(SourceDir))
                 throw new ArgumentException("source directory does not exist");
 
             Filter filter = new Filter(SourceDir);
-            
-            //string DirName = (new DirectoryInfo(SourceDir)).Name;
-
-            //if (Path.GetFileName(MirrorDir) != DirName)
-            //    throw new ArgumentException();
-            //if (Path.GetFileName(BackDiffDir) != DirName)
-            //    throw new ArgumentException();
+           
 
             if (!Directory.Exists(MirrorDir)) {
                 // +++++++++++++++++++++++
@@ -60,18 +95,20 @@ namespace BkdiffBackup
                     if (!Directory.Exists(MirrorDir))
                         throw new BackupException("unable to create directory in mirror", new DirectoryInfo(MirrorDir));
                 } catch(Exception e) {
-                    Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                    errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                    errLog.Flush();
                 }
             }
 
             // sync files
-            SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath, filter);
+            SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath, filter, log, errLog, LogFileList, CopyAccessControlLists);
 
             string[] SourceDirs; 
             try { 
                 SourceDirs = Directory.GetDirectories(SourceDir); // files in the source directory
             } catch(Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
                 SourceDirs = new string[0];
             }
                                  
@@ -79,13 +116,13 @@ namespace BkdiffBackup
             try {
                 MirrorDirs = Directory.GetDirectories(MirrorDir); // files already present in the mirror directory
             } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
                 MirrorDirs = new string[0];
             }
 
             // filter source dirs
             SourceDirs = SourceDirs.Where(dn => filter.FilterItem(dn) == false).ToArray();
-
             
             // recursion
             foreach(string s in SourceDirs) {
@@ -106,7 +143,7 @@ namespace BkdiffBackup
                     MirrorDirs[idxFound] = null;
                 }
 
-                SyncDirsRecursive(s, Path.Combine(MirrorDir, SubDirName), Path.Combine(BackDiffDir, SubDirName), RelPath.Cat1(SubDirName));
+                SyncDirsRecursive(s, Path.Combine(MirrorDir, SubDirName), Path.Combine(BackDiffDir, SubDirName), Cat1( RelPath, SubDirName), log, errLog, LogFileList, CopyAccessControlLists);
             }
 
             // move un-matched directories in mirror to backdiff
@@ -118,16 +155,16 @@ namespace BkdiffBackup
                 string SubBackDiffDir = Path.Combine(BackDiffDir, Path.GetFileName(s));
 
                 if (!BackDiffCreated) {
-                    EnsureBackDiffDir(BackDiffDir, MirrorDir, RelPath);
+                    EnsureBackDiffDir(BackDiffDir, MirrorDir, RelPath, errLog, CopyAccessControlLists);
                     BackDiffCreated = true;
                 }
 
-                SaveDirectoryMove(s, SubBackDiffDir);
+                SaveDirectoryMove(s, SubBackDiffDir, log, errLog, LogFileList, CopyAccessControlLists);
             }
         }
 
 
-        static void SyncFilesInDir(string SourceDir, string MirrorDir, string BkdiffDir, string[] RelPath, Filter filter) {
+        static void SyncFilesInDir(string SourceDir, string MirrorDir, string BkdiffDir, string[] RelPath, Filter filter, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
            
             if (!Directory.Exists(SourceDir))
                 throw new ArgumentException();
@@ -141,7 +178,8 @@ namespace BkdiffBackup
             try {
                 SourceFiles = Directory.GetFiles(SourceDir); // files in the source directory
             } catch(Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
                 SourceFiles = new string[0];
             }
 
@@ -150,7 +188,8 @@ namespace BkdiffBackup
             try {
                 MirrorFiles = Directory.GetFiles(MirrorDir); // files already present in the mirror directory
             } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
                 MirrorFiles = new string[0];
             }
 
@@ -181,7 +220,7 @@ namespace BkdiffBackup
                     // file is not present in mirror directory => copy
                     // +++++++++++++++++++++++++++++++++++++++++++++++
                     string MirrorFilePath = Path.Combine(MirrorDir, Path.GetFileName(srcFile));
-                    SaveCopy(srcFile, MirrorFilePath);
+                    SaveCopy(srcFile, MirrorFilePath, log, errLog, LogFileList, CopyAccessControlLists);
 
                 } else {
                     string MirrorFile = MirrorFiles[idxFound];
@@ -208,15 +247,15 @@ namespace BkdiffBackup
                             // + + + + + + + + + + + + 
 
                             if (!BackDiffCreated) {
-                                EnsureBackDiffDir(BkdiffDir, MirrorDir, RelPath);
+                                EnsureBackDiffDir(BkdiffDir, MirrorDir, RelPath, errLog, CopyAccessControlLists);
                                 BackDiffCreated = true;
                             }
 
                             string BkdiffName = Path.Combine(BkdiffDir, Path.GetFileName(MirrorFile));
-                            SaveMove(MirrorFile, BkdiffName);
+                            SaveMove(MirrorFile, BkdiffName, log, errLog, LogFileList, CopyAccessControlLists);
                         }
 
-                        SaveCopy(srcFile, MirrorFile);
+                        SaveCopy(srcFile, MirrorFile, log, errLog, LogFileList, CopyAccessControlLists);
 
                         MirrorFiles[idxFound] = null;
                         MirrorFile = null;
@@ -233,25 +272,29 @@ namespace BkdiffBackup
                     continue;
 
                 if (!BackDiffCreated) {
-                    EnsureBackDiffDir(BkdiffDir, MirrorDir, RelPath);
+                    EnsureBackDiffDir(BkdiffDir, MirrorDir, RelPath, errLog, CopyAccessControlLists);
                     BackDiffCreated = true;
                 }
 
                 string BkdiffName = Path.Combine(BkdiffDir, Path.GetFileName(MirrorFiles[iTarg]));
-                SaveMove(MirrorFiles[iTarg], BkdiffName);
+                SaveMove(MirrorFiles[iTarg], BkdiffName, log, errLog, LogFileList, CopyAccessControlLists);
 
                 MirrorFiles[iTarg] = null;
             }
 
         }
 
-        private static void SaveMove(string MirrorFile, string BkdiffName) {
+        private static void SaveMove(string MirrorFile, string BkdiffName, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
             //if (Path.GetFileName(MirrorFile) == "Dopamine 1.5.12.0.msi")
             //    Console.Write(".");
 
             try {
-                                
-                FileSecurity ac1 = File.GetAccessControl(MirrorFile);
+                FileSecurity ac1 = null;
+                if(CopyAccessControlLists)
+                    ac1 = File.GetAccessControl(MirrorFile);
+                if(LogFileList) {
+                    log.WriteLine("Moving file: '{0}' -> '{1}'", MirrorFile, BkdiffName);
+                }
                 File.Move(MirrorFile, BkdiffName);
                 //FileInfo BackdiffFile = new FileInfo(BkdiffName);
 
@@ -260,18 +303,26 @@ namespace BkdiffBackup
                     throw new BackupException("File move Failed", new FileInfo(BkdiffName));
 
                 // try to set security
-                ac1.SetAccessRuleProtection(true, true);
-                File.SetAccessControl(BkdiffName, ac1);
+                if (CopyAccessControlLists) {
+                    ac1.SetAccessRuleProtection(true, true);
+                    File.SetAccessControl(BkdiffName, ac1);
+                }
 
             } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
             }
         }
 
-        private static void SaveDirectoryMove(string MirrorFile, string BkdiffName) {
+        private static void SaveDirectoryMove(string MirrorFile, string BkdiffName, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
             try {
-                                
-                DirectorySecurity ac1 = Directory.GetAccessControl(MirrorFile);
+
+                DirectorySecurity ac1 = null;
+                if(CopyAccessControlLists)
+                    ac1 = Directory.GetAccessControl(MirrorFile);
+                if(LogFileList) {
+                    log.WriteLine("Moving directory: '{0}' -> '{1}'", MirrorFile, BkdiffName);
+                }
                 Directory.Move(MirrorFile, BkdiffName);
                 //FileInfo BackdiffFile = new FileInfo(BkdiffName);
 
@@ -280,15 +331,18 @@ namespace BkdiffBackup
                     throw new BackupException("Directory move Failed", new DirectoryInfo(BkdiffName));
 
                 // try to set security
-                ac1.SetAccessRuleProtection(true, true);
-                Directory.SetAccessControl(BkdiffName, ac1);
+                if (CopyAccessControlLists) {
+                    ac1.SetAccessRuleProtection(true, true);
+                    Directory.SetAccessControl(BkdiffName, ac1);
+                }
 
             } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
             }
         }
 
-        private static void EnsureBackDiffDir(string BkdiffDir, string MirrorDir, string[] RelPath) {
+        private static void EnsureBackDiffDir(string BkdiffDir, string MirrorDir, string[] RelPath, TextWriter errLog, bool CopyAccessControlLists) {
             if (RelPath.Length <= 0)
                 throw new ApplicationException();
 
@@ -297,7 +351,7 @@ namespace BkdiffBackup
 
             string BaseBkdiffDir = Path.GetDirectoryName(BkdiffDir);
             if(!Directory.Exists(BaseBkdiffDir)) {
-                EnsureBackDiffDir(BaseBkdiffDir, Path.GetDirectoryName(MirrorDir), RelPath.Take(RelPath.Length - 1).ToArray());
+                EnsureBackDiffDir(BaseBkdiffDir, Path.GetDirectoryName(MirrorDir), RelPath.Take(RelPath.Length - 1).ToArray(), errLog, CopyAccessControlLists);
             }
 
             try {
@@ -305,18 +359,28 @@ namespace BkdiffBackup
                     Directory.CreateDirectory(BkdiffDir); ;
 
                     // try to set security
-                    DirectorySecurity sec = Directory.GetAccessControl(MirrorDir);
-                    sec.SetAccessRuleProtection(true, true);
-                    Directory.SetAccessControl(BkdiffDir, sec);
+                    if (CopyAccessControlLists) {
+                        DirectorySecurity sec = Directory.GetAccessControl(MirrorDir);
+                        sec.SetAccessRuleProtection(true, true);
+                        Directory.SetAccessControl(BkdiffDir, sec);
+                    }
                 }
             } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
             }
         }
 
-        private static void SaveCopy(string srcFile, string MirrorFilePath) {
+        private static void SaveCopy(string srcFile, string MirrorFilePath, TextWriter log, TextWriter errLog, bool LogFileList, bool CopyAccessControlLists) {
             try {
+                FileSecurity ac1 = null;
+                if(CopyAccessControlLists)
+                    ac1 = (new FileInfo(srcFile)).GetAccessControl();
+
                 FileInfo srcFileInfo = new FileInfo(srcFile);
+                if(LogFileList) {
+                    log.WriteLine("Copy: '{0}' -> '{1}'", srcFile, MirrorFilePath);
+                }
                 srcFileInfo.CopyTo(MirrorFilePath, false);
 
                 FileInfo MirrorFile = new FileInfo(MirrorFilePath);
@@ -326,40 +390,14 @@ namespace BkdiffBackup
                     throw new BackupException("File Copy Failed", MirrorFile);
 
                 // try to set security
-                FileSecurity ac1 = (new FileInfo(srcFile)).GetAccessControl();
-                ac1.SetAccessRuleProtection(true, true);
-                MirrorFile.SetAccessControl(ac1);
+                if (CopyAccessControlLists) {
+                    ac1.SetAccessRuleProtection(true, true);
+                    MirrorFile.SetAccessControl(ac1);
+                }
             } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
             }
         }
-
-        /*
-        static void TraverseRecursive(out int dirCount, out int fileCount) {
-            string[] Files;
-            try {
-                Files = Directory.GetFiles(path);
-            } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
-                Files = new string[0];
-            }
-            fileCount = Files.Length;
-
-            string[] Dirs;
-            try {
-                Dirs = Directory.GetDirectories(path);
-            } catch (Exception e) {
-                Console.Error.WriteLine(e.GetType().Name + ": " + e.Message);
-                Dirs = new string[0];
-            }
-            dirCount = Dirs.Length;
-
-            foreach (string subpath in Dirs) {
-                TraverseRecursive(out int _dirCount, out int _fileCount, subpath);
-                dirCount += _dirCount;
-                fileCount += _fileCount;
-            }
-        }
-        */
     }
 }
