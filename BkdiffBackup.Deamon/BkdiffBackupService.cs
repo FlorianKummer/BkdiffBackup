@@ -74,8 +74,8 @@ namespace BkdiffBackup {
                 foreach (var c in ProgramData.CurrentConfiguration.Directories) {
                     try {
                         Logmsg(string.Format("Running backup '{0}' -> '{1}' ...", c.DirectoryToBackup, c.MirrorLocation));
-                        Kernel.RunFromConfig(c);
-                        Logmsg("success.");
+                        var s = Kernel.RunFromConfig(c);
+                        Logmsg("success. statistics: " + s.ToString());
                     } catch (Exception e) {
                         Logmsg("SERIOUS EXCEPTION - BACKUP INCOMPLETE: " + e.GetType().Name + ": '" + e.Message + "' Stacktrace: " + e.StackTrace);
                     }

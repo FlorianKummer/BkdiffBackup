@@ -8,8 +8,33 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BkdiffBackup
-{
+namespace BkdiffBackup {
+
+    public  class Stats {
+        public long CopiedBytes = 0;
+
+        public int CopiedFiles = 0;
+
+        public int CopiedDirectories = 0;
+
+        public int Errors = 0;
+
+        public TimeSpan Duration;
+
+        public override string ToString() {
+            return String.Format(
+                "Duration {6}: {9} error{10}, copied {0} file{1}, checked {2} director{3}, {4} byte{5}; {7:N1} MB/sec, {8} files/sec",
+                CopiedFiles, CopiedFiles == 1 ? "" : "s",
+                CopiedDirectories, CopiedDirectories == 1 ? "y" : "ies",
+                CopiedBytes, CopiedBytes == 1 ? "" : "s",
+                Duration,
+                ((double)CopiedBytes) / (1000.0 * Duration.TotalSeconds),
+                ((double)CopiedFiles) / (1000.0 * Duration.TotalSeconds),
+                Errors, Errors == 1 ? "" : "s"
+                );
+        }
+    }
+
     static public class Kernel {
 
         public static void RunNow(
@@ -27,7 +52,9 @@ namespace BkdiffBackup
         }
 
 
-        static public void RunFromConfig(Configuration.BkupDir c) {
+        static public Stats RunFromConfig(Configuration.BkupDir c) {
+            DateTime start = DateTime.Now;
+            ResetStat();
 
             string SourcePath = c.DirectoryToBackup;
             if (!Directory.Exists(SourcePath))
@@ -60,10 +87,23 @@ namespace BkdiffBackup
             using (TextWriter log = new StreamWriter(InfoLogPath), errLog = new StreamWriter(ErrLogPath)) {
 
                 SyncDirsRecursive(SourcePath, MirrorPath, BkDiffPath, new string[0], log, errLog, c.LogFileList, c.CopyAccessControlLists);
+                _stats.Duration = DateTime.Now - start;
+                log.WriteLine(_stats.ToString());
                 log.Flush();
                 errLog.Flush();
             }
+
+            return _stats;
         }
+
+
+        static Stats _stats = new Stats();
+
+        static void ResetStat() {
+            _stats = new Stats();
+        }
+
+
 
 
 
@@ -81,6 +121,7 @@ namespace BkdiffBackup
                 else 
                     return false;
             }
+            _stats.CopiedDirectories++;
 
             Filter filter = new Filter(SourceDir, errLog);
            
@@ -323,6 +364,7 @@ namespace BkdiffBackup
             } catch (Exception e) {
                 errLog.WriteLine(e.GetType().Name + ": " + e.Message);
                 errLog.Flush();
+                _stats.Errors++;
             }
         }
 
@@ -351,6 +393,7 @@ namespace BkdiffBackup
             } catch (Exception e) {
                 errLog.WriteLine(e.GetType().Name + ": " + e.Message);
                 errLog.Flush();
+                _stats.Errors++;
             }
         }
 
@@ -380,6 +423,7 @@ namespace BkdiffBackup
             } catch (Exception e) {
                 errLog.WriteLine(e.GetType().Name + ": " + e.Message);
                 errLog.Flush();
+                _stats.Errors++;
             }
         }
 
@@ -406,9 +450,14 @@ namespace BkdiffBackup
                     ac1.SetAccessRuleProtection(true, true);
                     MirrorFile.SetAccessControl(ac1);
                 }
+
+                _stats.CopiedFiles++;
+                _stats.CopiedBytes += srcFileInfo.Length;
+
             } catch (Exception e) {
                 errLog.WriteLine(e.GetType().Name + ": " + e.Message);
                 errLog.Flush();
+                _stats.Errors++;
             }
         }
     }
