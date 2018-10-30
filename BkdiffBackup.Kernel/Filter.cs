@@ -33,10 +33,11 @@ namespace BkdiffBackup {
         /// <param name="Name">
         /// Absolute path of file-system item (file or directory) for which the filters should be tested
         /// </param>
+        /// <param name="errLog"></param>
         /// <returns>
         /// true if item <paramref name="Name"/> should *NOT* be in the backup
         /// </returns>
-        public bool FilterItem(string Name) {
+        public bool FilterItem(string Name, TextWriter errLog) {
             string TopDirName = Path.GetFileName(Name);
 
             if (IncludeList != null) {
@@ -79,9 +80,16 @@ namespace BkdiffBackup {
             }
 
 
+            try {
+                if ((File.GetAttributes(Name) & FileAttributes.ReparsePoint) != 0)
+                    return true;
+            } catch (Exception e) {
+                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
+                errLog.Flush();
+                return true; // something weired with file 
+            }
 
-            if ((File.GetAttributes(Name) & FileAttributes.ReparsePoint) != 0)
-                return true;
+
 
             foreach(var s in BlackList) {
 

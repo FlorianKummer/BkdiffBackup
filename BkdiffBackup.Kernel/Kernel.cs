@@ -166,7 +166,7 @@ namespace BkdiffBackup {
             }
 
             // filter source dirs
-            SourceDirs = SourceDirs.Where(dn => filter.FilterItem(dn) == false).ToArray();
+            SourceDirs = SourceDirs.Where(dn => filter.FilterItem(dn, errLog) == false).ToArray();
             
             // recursion
             foreach(string s in SourceDirs) {
@@ -241,7 +241,7 @@ namespace BkdiffBackup {
             }
 
             // filter source dirs
-            SourceFiles = SourceFiles.Where(dn => filter.FilterItem(dn) == false).ToArray();
+            SourceFiles = SourceFiles.Where(dn => filter.FilterItem(dn, errLog) == false).ToArray();
             
             bool BackDiffCreated = Directory.Exists(BkdiffDir);
 
