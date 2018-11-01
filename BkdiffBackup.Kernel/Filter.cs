@@ -33,11 +33,9 @@ namespace BkdiffBackup {
         /// <param name="Name">
         /// Absolute path of file-system item (file or directory) for which the filters should be tested
         /// </param>
-        /// <param name="errLog"></param>
-        /// <returns>
         /// true if item <paramref name="Name"/> should *NOT* be in the backup
         /// </returns>
-        public bool FilterItem(string Name, TextWriter errLog) {
+        public bool FilterItem(string Name) {
             string TopDirName = Path.GetFileName(Name);
 
             if (IncludeList != null) {
@@ -84,8 +82,7 @@ namespace BkdiffBackup {
                 if ((File.GetAttributes(Name) & FileAttributes.ReparsePoint) != 0)
                     return true;
             } catch (Exception e) {
-                errLog.WriteLine(e.GetType().Name + ": " + e.Message);
-                errLog.Flush();
+                Kernel.Error(e.GetType().Name + ": " + e.Message);
                 return true; // something weired with file 
             }
 
@@ -126,14 +123,14 @@ namespace BkdiffBackup {
         /// Constructor: reads local include, resp. black-lists.
         /// </summary>
         /// <param name="Directory"></param>
-        public Filter(string Directory, TextWriter errLog) {
+        public Filter(string Directory) {
             string inc = Path.Combine(Directory, INCLUDE_LIST_NAME);
 
             if(File.Exists(inc)) {
                 try {
                     IncludeList = File.ReadAllLines(inc);
                 } catch(Exception e) {
-                    errLog.WriteLine(e.GetType().Name + " during reading include list '" + inc + "'");
+                    Kernel.Error(e.GetType().Name + " during reading include list '" + inc + "'");
                     IncludeList = null;
                 } 
             } else {
@@ -146,7 +143,7 @@ namespace BkdiffBackup {
                 try {
                     _BlackList = File.ReadAllLines(blk);
                 } catch(Exception e) {
-                    errLog.WriteLine(e.GetType().Name + " during reading black-list '" + inc + "'");
+                    Kernel.Error(e.GetType().Name + " during reading black-list '" + inc + "'");
                     _BlackList = new string[0];
                 } 
             } else {
