@@ -29,8 +29,8 @@ namespace BkdiffBackup {
                 CopiedDirectories, CopiedDirectories == 1 ? "y" : "ies",
                 CopiedBytes/(1024.0*1024.0), "", //CopiedBytes == 1 ? "" : "s",
                 Duration,
-                ((double)CopiedBytes) / (1000.0 * Duration.TotalSeconds),
-                ((double)CopiedFiles) / (1000.0 * Duration.TotalSeconds),
+                ((double)CopiedBytes) / (1024.0*1024.0 * Duration.TotalSeconds),
+                ((double)CopiedFiles) / (Duration.TotalSeconds),
                 Errors, Errors == 1 ? "" : "s"
                 );
         }

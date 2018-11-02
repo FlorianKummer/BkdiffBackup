@@ -18,7 +18,8 @@ namespace BkdiffBackup {
             "$Recycle.Bin",
             "ntuser.dat*",
             "desktop.ini",
-            "thumbs.db"
+            "thumbs.db",
+            ".ds_store"
         };
 
         private static Regex WildcardToRegex(string pattern) {
