@@ -256,7 +256,13 @@ namespace BkdiffBackup {
             }
 
             // sync files
-            SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath, filter, LogFileList, CopyAccessControlLists);
+            try {
+                SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath, filter, LogFileList, CopyAccessControlLists);
+            } catch(Exception e) {
+                Error(e.GetType().Name + " (exception in recursion): " + e.Message);
+            }
+
+
 
             string[] SourceDirs; 
             try { 
@@ -323,9 +329,9 @@ namespace BkdiffBackup {
         static void SyncFilesInDir(string SourceDir, string MirrorDir, string BkdiffDir, string[] RelPath, Filter filter, bool LogFileList, bool CopyAccessControlLists) {
            
             if (!Directory.Exists(SourceDir))
-                throw new ArgumentException();
+                throw new ArgumentException("Source directory '{0}' does not exist.", SourceDir);
             if (!Directory.Exists(MirrorDir))
-                throw new ArgumentException("Mirror directory does not exist.");
+                throw new ArgumentException("Mirror directory '{0}' does not exist.", MirrorDir);
 
             // ==============
             // get file list
