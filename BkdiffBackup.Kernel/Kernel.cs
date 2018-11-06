@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 
 namespace BkdiffBackup {
 
+    /// <summary>
+    /// Statistic of the backup run
+    /// </summary>
     public  class Stats {
         public long CopiedBytes = 0;
 
@@ -36,6 +39,9 @@ namespace BkdiffBackup {
         }
     }
 
+    /// <summary>
+    /// Bkdiff-Backup functions, all implemented static
+    /// </summary>
     static public class Kernel {
 
         public static void RunNow(
@@ -180,6 +186,16 @@ namespace BkdiffBackup {
             throw ee;
         }
 
+        public static void Error(Exception e) {
+            Error(e.GetType().Name + ": " + e.Message + " at " + e.StackTrace);
+        }
+
+        public static void Error(Exception e, string info) {
+            Error(e.GetType().Name + " " + info + ": " + e.Message + " at " + e.StackTrace);
+        }
+
+        
+
 
         public static void Error(string s) {
             try {
@@ -251,7 +267,7 @@ namespace BkdiffBackup {
                     if (!Directory.Exists(MirrorDir))
                         throw new BackupException("unable to create directory in mirror", new DirectoryInfo(MirrorDir));
                 } catch(Exception e) {
-                    Error(e.GetType().Name + ": " + e.Message);
+                    Error(e);
                 }
             }
 
@@ -259,7 +275,7 @@ namespace BkdiffBackup {
             try {
                 SyncFilesInDir(SourceDir, MirrorDir, BackDiffDir, RelPath, filter, LogFileList, CopyAccessControlLists);
             } catch(Exception e) {
-                Error(e.GetType().Name + " (exception in recursion): " + e.Message);
+                Error(e, "(exception in recursion)");
             }
 
 
@@ -268,7 +284,7 @@ namespace BkdiffBackup {
             try { 
                 SourceDirs = Directory.GetDirectories(SourceDir); // files in the source directory
             } catch(Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 SourceDirs = new string[0];
             }
                                  
@@ -276,7 +292,7 @@ namespace BkdiffBackup {
             try {
                 MirrorDirs = Directory.GetDirectories(MirrorDir); // files already present in the mirror directory
             } catch (Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 MirrorDirs = new string[0];
             }
 
@@ -340,7 +356,7 @@ namespace BkdiffBackup {
             try {
                 SourceFiles = Directory.GetFiles(SourceDir); // files in the source directory
             } catch(Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 SourceFiles = new string[0];
             }
 
@@ -349,7 +365,7 @@ namespace BkdiffBackup {
             try {
                 MirrorFiles = Directory.GetFiles(MirrorDir); // files already present in the mirror directory
             } catch (Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 MirrorFiles = new string[0];
             }
 
@@ -475,7 +491,7 @@ namespace BkdiffBackup {
                 }
 
             } catch (Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 _stats.Errors++;
             }
         }
@@ -503,7 +519,7 @@ namespace BkdiffBackup {
                 }
 
             } catch (Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 _stats.Errors++;
             }
         }
@@ -532,7 +548,7 @@ namespace BkdiffBackup {
                     }
                 }
             } catch (Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 _stats.Errors++;
             }
         }
@@ -565,7 +581,7 @@ namespace BkdiffBackup {
                 _stats.CopiedBytes += srcFileInfo.Length;
 
             } catch (Exception e) {
-                Error(e.GetType().Name + ": " + e.Message);
+                Error(e);
                 _stats.Errors++;
             }
         }

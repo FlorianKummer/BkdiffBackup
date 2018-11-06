@@ -83,7 +83,7 @@ namespace BkdiffBackup {
                 if ((File.GetAttributes(Name) & FileAttributes.ReparsePoint) != 0)
                     return true;
             } catch (Exception e) {
-                Kernel.Error(e.GetType().Name + ": " + e.Message);
+                Kernel.Error(e);
                 return true; // something weired with file 
             }
 
@@ -131,7 +131,7 @@ namespace BkdiffBackup {
                 try {
                     IncludeList = File.ReadAllLines(inc);
                 } catch(Exception e) {
-                    Kernel.Error(e.GetType().Name + " during reading include list '" + inc + "'");
+                    Kernel.Error(e, " during reading include list '" + inc + "'");
                     IncludeList = null;
                 } 
             } else {
@@ -144,7 +144,7 @@ namespace BkdiffBackup {
                 try {
                     _BlackList = File.ReadAllLines(blk);
                 } catch(Exception e) {
-                    Kernel.Error(e.GetType().Name + " during reading black-list '" + inc + "'");
+                    Kernel.Error(e, " during reading black-list '" + inc + "'");
                     _BlackList = new string[0];
                 } 
             } else {
