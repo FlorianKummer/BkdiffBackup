@@ -13,6 +13,33 @@ namespace BkdiffBackup {
 
         static void Main(string[] args) {
 
+            /*
+            string fix = @"\\?\";
+
+            string src = @"I:\misc\fdy-publication-data\Thesis\2017\Lindig\root3\src\public\L4-application\CutCellQuadrature\bin\Release\Comapare\lindigsinustestcase18avol_EqPol_tiny_0th_1th_2th_comp_NEW\lindigsinustestcase18avol_Square_Tiny_EquivalentPolynomials_0th.txt";
+            string dst = @"\\?\UNC\terminal03\BackupTemp\misc\fdy-publication-data\Thesis\2017\Lindig\root3\src\public\L4-application\CutCellQuadrature\bin\Release\Comapare\lindigsinustestcase18avol_EqPol_tiny_0th_1th_2th_comp_NEW\lindigsinustestcase18avol_Square_Tiny_EquivalentPolynomials_0th.txt";
+
+
+            string oda = @"a:\dsjflsfjldsjaljflsfjslfjldsjfsjkflsfjsalfjlöjkjl\hfkjdhfkahfkjdsafkjhvhfuggvztzsgcghysvcsv\fchrcerbjsd\ahgxvhkbcas\xcatevdhssyvbcgh\cheatgvhdvm\terminal03\BackupTemp\misc\fdy-publication-data\Thesis\2017\Lindig\root3\src\public\L4-application\CutCellQuadrature\bin\Release\Comapare\lindigsinustestcase18avol_EqPol_tiny_0th_1th_2th_comp_NEW\lindigsinustestcase18avol_Square_Tiny_EquivalentPolynomials_0th.txt";
+
+            string a = Path.GetDirectoryName(oda);
+            string b = Path.GetFileName(oda);
+
+
+            Console.WriteLine("src exists: " + File.Exists(src));
+
+            Console.WriteLine("dst dir: " + Directory.Exists(@"\\terminal03\BackupTemp"));
+            Console.WriteLine("dst dir: " + Directory.Exists(@"\\?\UNC\terminal03\BackupTemp"));
+            
+
+
+            File.Copy(fix + src, dst, true);
+            //*/
+
+
+
+
+
             if (ProgramData.ConfigfileExists) {
                 ProgramData.ReloadConfiguration();
 
@@ -41,7 +68,7 @@ namespace BkdiffBackup {
                 Console.WriteLine("Enter valid configuration and run again.");
             }
             
-
+    
 
 
         }

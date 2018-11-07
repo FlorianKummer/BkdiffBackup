@@ -219,7 +219,7 @@ namespace BkdiffBackup {
             try {
                 InfoLogStream.WriteLine(s);
                 InfoLogStream.Flush();
-            } catch(Exception e) {
+            } catch(Exception) {
                 // retry
                 ResetWriter(ref InfoLogStream, InfoLogPath);
                 InfoLogStream.WriteLine("stream recovered...");
@@ -253,18 +253,18 @@ namespace BkdiffBackup {
 
             Filter filter = new Filter(SourceDir);
            
-            if (!Directory.Exists(MirrorDir)) {
+            if (!Directory.Exists(FixLongPath(MirrorDir))) {
                 // +++++++++++++++++++++++
                 // create mirror directory
                 // +++++++++++++++++++++++
 
                 try {
-                    Directory.CreateDirectory(MirrorDir);
-                    DirectorySecurity sec = Directory.GetAccessControl(SourceDir);
+                    Directory.CreateDirectory(FixLongPath(MirrorDir));
+                    DirectorySecurity sec = Directory.GetAccessControl(FixLongPath(SourceDir));
                     sec.SetAccessRuleProtection(true, true);
-                    Directory.SetAccessControl(MirrorDir, sec);
+                    Directory.SetAccessControl(FixLongPath(MirrorDir), sec);
 
-                    if (!Directory.Exists(MirrorDir))
+                    if (!Directory.Exists(FixLongPath(MirrorDir)))
                         throw new BackupException("unable to create directory in mirror", new DirectoryInfo(MirrorDir));
                 } catch(Exception e) {
                     Error(e);
@@ -282,7 +282,7 @@ namespace BkdiffBackup {
 
             string[] SourceDirs; 
             try { 
-                SourceDirs = Directory.GetDirectories(SourceDir); // files in the source directory
+                SourceDirs = Directory.GetDirectories(FixLongPath(SourceDir)); // files in the source directory
             } catch(Exception e) {
                 Error(e);
                 SourceDirs = new string[0];
@@ -290,7 +290,7 @@ namespace BkdiffBackup {
                                  
             string[] MirrorDirs;
             try {
-                MirrorDirs = Directory.GetDirectories(MirrorDir); // files already present in the mirror directory
+                MirrorDirs = Directory.GetDirectories(FixLongPath(MirrorDir)); // files already present in the mirror directory
             } catch (Exception e) {
                 Error(e);
                 MirrorDirs = new string[0];
@@ -323,7 +323,7 @@ namespace BkdiffBackup {
             }
 
             // move un-matched directories in mirror to backdiff
-            bool BackDiffCreated = Directory.Exists(BackDiffDir);
+            bool BackDiffCreated = Directory.Exists(FixLongPath(BackDiffDir));
             foreach (string s in MirrorDirs) {
                 if (s == null)
                     continue;
@@ -344,9 +344,9 @@ namespace BkdiffBackup {
 
         static void SyncFilesInDir(string SourceDir, string MirrorDir, string BkdiffDir, string[] RelPath, Filter filter, bool LogFileList, bool CopyAccessControlLists) {
            
-            if (!Directory.Exists(SourceDir))
+            if (!Directory.Exists(FixLongPath(SourceDir)))
                 throw new ArgumentException("Source directory '{0}' does not exist.", SourceDir);
-            if (!Directory.Exists(MirrorDir))
+            if (!Directory.Exists(FixLongPath(MirrorDir)))
                 throw new ArgumentException("Mirror directory '{0}' does not exist.", MirrorDir);
 
             // ==============
@@ -354,7 +354,7 @@ namespace BkdiffBackup {
             // ==============
             string[] SourceFiles;
             try {
-                SourceFiles = Directory.GetFiles(SourceDir); // files in the source directory
+                SourceFiles = Directory.GetFiles(FixLongPath(SourceDir)); // files in the source directory
             } catch(Exception e) {
                 Error(e);
                 SourceFiles = new string[0];
@@ -363,7 +363,7 @@ namespace BkdiffBackup {
 
             string[] MirrorFiles;
             try {
-                MirrorFiles = Directory.GetFiles(MirrorDir); // files already present in the mirror directory
+                MirrorFiles = Directory.GetFiles(FixLongPath(MirrorDir)); // files already present in the mirror directory
             } catch (Exception e) {
                 Error(e);
                 MirrorFiles = new string[0];
@@ -372,7 +372,7 @@ namespace BkdiffBackup {
             // filter source dirs
             SourceFiles = SourceFiles.Where(dn => filter.FilterItem(dn) == false).ToArray();
             
-            bool BackDiffCreated = Directory.Exists(BkdiffDir);
+            bool BackDiffCreated = Directory.Exists(FixLongPath(BkdiffDir));
 
             // ===============================
             // sync source directory to mirror
@@ -417,7 +417,7 @@ namespace BkdiffBackup {
                         // something on file changed => copy
                         // +++++++++++++++++++++++++++++++++
 
-                        if (File.Exists(MirrorFile)) {
+                        if (File.Exists(FixLongPath(MirrorFile))) {
                             // + + + + + + + + + + + + 
                             // move mirror to backdiff
                             // + + + + + + + + + + + + 
@@ -469,8 +469,11 @@ namespace BkdiffBackup {
         private static void SaveMove(string MirrorFile, string BkdiffName, bool LogFileList, bool CopyAccessControlLists) {
             //if (Path.GetFileName(MirrorFile) == "Dopamine 1.5.12.0.msi")
             //    Console.Write(".");
+            MirrorFile = FixLongPath(MirrorFile);
+            BkdiffName = FixLongPath(BkdiffName);
 
             try {
+
                 FileSecurity ac1 = null;
                 if(CopyAccessControlLists)
                     ac1 = File.GetAccessControl(MirrorFile);
@@ -497,6 +500,8 @@ namespace BkdiffBackup {
         }
 
         private static void SaveDirectoryMove(string MirrorFile, string BkdiffName, bool LogFileList, bool CopyAccessControlLists) {
+            MirrorFile = FixLongPath(MirrorFile);
+            BkdiffName = FixLongPath(BkdiffName);
             try {
 
                 DirectorySecurity ac1 = null;
@@ -527,11 +532,15 @@ namespace BkdiffBackup {
         private static void EnsureBackDiffDir(string BkdiffDir, string MirrorDir, string[] RelPath, bool CopyAccessControlLists) {
             if (RelPath.Length <= 0)
                 throw new ApplicationException();
-
+                       
             Debug.Assert(Path.GetFileName(BkdiffDir) == Path.GetFileName(MirrorDir));
             Debug.Assert(Path.GetFileName(BkdiffDir) == RelPath[RelPath.Length - 1]);
 
+            BkdiffDir = FixLongPath(BkdiffDir);
+            MirrorDir = FixLongPath(MirrorDir);
+
             string BaseBkdiffDir = Path.GetDirectoryName(BkdiffDir);
+            BaseBkdiffDir = FixLongPath(BaseBkdiffDir);
             if(!Directory.Exists(BaseBkdiffDir)) {
                 EnsureBackDiffDir(BaseBkdiffDir, Path.GetDirectoryName(MirrorDir), RelPath.Take(RelPath.Length - 1).ToArray(), CopyAccessControlLists);
             }
@@ -554,7 +563,10 @@ namespace BkdiffBackup {
         }
 
         private static void SaveCopy(string srcFile, string MirrorFilePath, bool LogFileList, bool CopyAccessControlLists) {
+            srcFile = FixLongPath(srcFile);
+            MirrorFilePath = FixLongPath(MirrorFilePath);
             try {
+
                 FileSecurity ac1 = null;
                 if(CopyAccessControlLists)
                     ac1 = (new FileInfo(srcFile)).GetAccessControl();
@@ -585,5 +597,25 @@ namespace BkdiffBackup {
                 _stats.Errors++;
             }
         }
+
+        private static string FixLongPath(string a) {
+
+            if (a.StartsWith(@"\\?\"))
+                return a;
+
+            if (!Path.IsPathRooted(a))
+                throw new ArgumentException();
+
+            if (a.Length < 250 && Path.GetDirectoryName(a).Length < 240)
+                // path lengths slightly below the actual limits
+                return a;
+
+            if (a.StartsWith(@"\\"))
+                return @"\\?\UNC" + a.Substring(1);
+            else
+                return @"\\?\" + a;
+
+        }
+
     }
 }
