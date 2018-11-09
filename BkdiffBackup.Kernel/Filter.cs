@@ -80,7 +80,7 @@ namespace BkdiffBackup {
 
 
             try {
-                if ((File.GetAttributes(Name) & FileAttributes.ReparsePoint) != 0)
+                if ((File.GetAttributes(Kernel.FixLongPath(Name)) & FileAttributes.ReparsePoint) != 0)
                     return true;
             } catch (Exception e) {
                 Kernel.Error(e);

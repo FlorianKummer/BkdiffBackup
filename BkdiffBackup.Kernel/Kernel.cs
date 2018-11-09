@@ -598,7 +598,7 @@ namespace BkdiffBackup {
             }
         }
 
-        private static string FixLongPath(string a) {
+        internal static string FixLongPath(string a) {
 
             if (a.StartsWith(@"\\?\"))
                 return a;
