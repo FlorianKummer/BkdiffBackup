@@ -44,14 +44,18 @@ namespace BkdiffBackup {
                 ProgramData.ReloadConfiguration();
 
                 foreach (var c in ProgramData.CurrentConfiguration.Directories) {
+#if !DEBUG
                     try {
+#endif
                         Console.WriteLine(string.Format("Running backup {0} -> {1} ...", c.DirectoryToBackup, c.MirrorLocation));
                         var stat = Kernel.RunFromConfig(c);
                         Console.WriteLine("done; statistics: " + stat.ToString());
+#if !DEBUG
                     } catch (Exception e) {
                         Console.Error.WriteLine("SERIOUS EXCEPTION - BACKUP INCOMPLETE: " + e.GetType().Name + ": " + e.Message);
 
                     }
+#endif
                 }
 
             } else {

@@ -401,9 +401,9 @@ namespace BkdiffBackup {
                 } else {
                     string MirrorFile = MirrorFiles[idxFound];
 
-                    bool WriteTimeOk = (File.GetLastWriteTimeUtc(MirrorFile) == File.GetLastWriteTimeUtc(srcFile));
+                    bool WriteTimeOk = (File.GetLastWriteTimeUtc(FixLongPath(MirrorFile)) == File.GetLastWriteTimeUtc(FixLongPath(srcFile)));
                     //bool AttributesOk = (File.GetAttributes(MirrorFile) == File.GetAttributes(srcFile));
-                    bool SizeOk = (new FileInfo(MirrorFile)).Length == (new FileInfo(srcFile)).Length;
+                    bool SizeOk = (new FileInfo(FixLongPath(MirrorFile))).Length == (new FileInfo(FixLongPath(srcFile))).Length;
 
                     if (WriteTimeOk && SizeOk) {
                         // ++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -606,7 +606,7 @@ namespace BkdiffBackup {
             if (!Path.IsPathRooted(a))
                 throw new ArgumentException();
 
-            if (a.Length < 250 && Path.GetDirectoryName(a).Length < 240)
+            if (a.Length < 250 && (Path.GetDirectoryName(a) ?? "").Length < 240)
                 // path lengths slightly below the actual limits
                 return a;
 
