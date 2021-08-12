@@ -63,7 +63,8 @@ namespace BkdiffBackup {
                 ProgramData.CurrentConfiguration.Directories = new Configuration.BkupDir[] {
                     new Configuration.BkupDir() {
                         DirectoryToBackup = "C:\\Users",
-                        MirrorLocation = "Specify-mirror-here"
+                        MirrorLocation = "Specify-mirror-here",
+                        BackdiffLocation = "Specify-backdiff-here"
                     }
                 };
                 ProgramData.SaveConfiguration();

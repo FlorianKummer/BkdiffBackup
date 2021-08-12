@@ -71,7 +71,13 @@ namespace BkdiffBackup {
                 Thread.Sleep(Sleeptime);
                 Logmsg("wakeup");
 
+                //bool anyFailed
                 foreach (var c in ProgramData.CurrentConfiguration.Directories) {
+                    /*if(IsDriveReady(c)) {
+
+                    } else {
+
+                    }*/
                     try {
                         Logmsg(string.Format("Running backup '{0}' -> '{1}' ...", c.DirectoryToBackup, c.MirrorLocation));
                         var s = Kernel.RunFromConfig(c);

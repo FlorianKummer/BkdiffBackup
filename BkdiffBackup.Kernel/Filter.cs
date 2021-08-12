@@ -7,6 +7,14 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BkdiffBackup {
+    
+    
+    /// <summary>
+    /// Filtering of files/subdirectories to include or exclude
+    /// - if an include list is present in some directory (a file named <see cref="INCLUDE_LIST_NAME"/>) **only** files/directories in this list are considered
+    /// - if a blacklist is present (a file named <see cref="BLACK_LIST"/>) every file/directory which matches some entry of the blacklist is omitted.
+    ///   The **blacklist dominates the include list**, i.e. if the same item is specified in the include and the black-list, the item is omitted.
+    /// </summary>
     class Filter {
 
         /// <summary>
@@ -116,9 +124,9 @@ namespace BkdiffBackup {
         string[] BlackList;
 
 
-        const string INCLUDE_LIST_NAME = "bkdiff-include-list.txt";
+        public const string INCLUDE_LIST_NAME = "bkdiff-include-list.txt";
 
-        const string INCLUDE_BLACK_LIST = "bkdiff-black-list.txt";
+        public const string BLACK_LIST = "bkdiff-black-list.txt";
 
         /// <summary>
         /// Constructor: reads local include, resp. black-lists.
@@ -138,7 +146,7 @@ namespace BkdiffBackup {
                 IncludeList = null;
             }
 
-            string blk = Path.Combine(Directory, INCLUDE_BLACK_LIST);
+            string blk = Path.Combine(Directory, BLACK_LIST);
             string[] _BlackList;
             if(File.Exists(blk)) {
                 try {

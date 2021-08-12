@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 namespace BkdiffBackup {
     /// <summary>
     /// All user-configurable items 
+    ///  - stored as a JSON file, 
+    ///  - see <see cref="ProgramData"/> for loading/unloading 
+    /// Further configuration can be done for each directory, 
+    /// where an include- as well as a black-list can be specified in form of a text file in order to control the backup procedure.
     /// </summary>
     [Serializable]
     public class Configuration {
@@ -25,9 +29,15 @@ namespace BkdiffBackup {
             public string DirectoryToBackup;
 
             /// <summary>
-            /// Location of the mirror; backdiff folders will be created side-by-side.
+            /// Location of the mirror
             /// </summary>
             public string MirrorLocation;
+
+
+            /// <summary>
+            /// location for backdiff folders
+            /// </summary>
+            public string BackdiffLocation;
 
             /// <summary>
             /// if true, each and every file copy will be logged

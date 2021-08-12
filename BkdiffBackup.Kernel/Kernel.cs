@@ -69,18 +69,22 @@ namespace BkdiffBackup {
 
 
             string MirrorPath = c.MirrorLocation;
-            
             if (!Directory.Exists(MirrorPath)) {
                 Directory.CreateDirectory(MirrorPath);
             }
 
-            string BkDiffPath = MirrorPath;
-            if (BkDiffPath.EndsWith("/") || BkDiffPath.EndsWith("\\"))
-                BkDiffPath = Path.GetDirectoryName(BkDiffPath);
+            string BkdiffOffset = c.BackdiffLocation;
+            if (!Directory.Exists(BkdiffOffset)) {
+                Directory.CreateDirectory(BkdiffOffset);
+            }
 
+
+            //if (BkDiffPath.EndsWith("/") || BkDiffPath.EndsWith("\\"))
+            //    BkDiffPath = Path.GetDirectoryName(BkDiffPath);
+            string BkDiffPath = Path.Combine(BkdiffOffset, Path.GetFileName(MirrorPath)??"_");
             string DateString = DateTime.Now.ToString("yyyy-MMM-dd--HH-mm-ss");
             string LogBaseName = BkDiffPath;
-            BkDiffPath = BkDiffPath + "-bkdiff-" + DateString;
+            BkDiffPath = Path.Combine(BkDiffPath, BkDiffPath + "-bkdiff-" + DateString);
 
             string __InfoLogPath = (LogBaseName + "-" + DateString + "-Info.txt");
             string __ErrLogPath = (LogBaseName + "-" + DateString + "-Err.txt");
@@ -96,6 +100,8 @@ namespace BkdiffBackup {
             InfoLogPath = __InfoLogPath;
             ResetWriter(ref InfoLogStream, InfoLogPath);
             ResetWriter(ref ErrLogStream, ErrLogPath);
+
+            
 
             try {
                 SyncDirsRecursive(SourcePath, MirrorPath, BkDiffPath, new string[0], c.LogFileList, c.CopyAccessControlLists);
