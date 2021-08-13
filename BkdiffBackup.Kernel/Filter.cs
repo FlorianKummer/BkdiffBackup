@@ -27,7 +27,11 @@ namespace BkdiffBackup {
             "ntuser.dat*",
             "desktop.ini",
             "thumbs.db",
-            ".ds_store"
+            ".ds_store",
+            "*\\bin\\Debug",
+            "*\\bin\\Release",
+            "*\\obj\\Debug",
+            "*\\obj\\Release"
         };
 
         private static Regex WildcardToRegex(string pattern) {
@@ -159,9 +163,29 @@ namespace BkdiffBackup {
                 _BlackList = new string[0];
             }
 
+            SanitizeList(ref IncludeList);
+            SanitizeList(ref _BlackList);
+
+
             BlackList = new string[DefaultBlackList.Length + _BlackList.Length];
             Array.Copy(DefaultBlackList, BlackList, DefaultBlackList.Length);
             Array.Copy(_BlackList, 0, BlackList, DefaultBlackList.Length, _BlackList.Length);
+        }
+
+
+        static void SanitizeList(ref string[] myList) {
+            if(myList == null)
+                return;
+            List<string> temp = new List<string>(myList);
+            for(int i = 0; i < temp.Count; i++) {
+                temp[i] = temp[i].Trim();
+                if(temp[i].Length <= 0) {
+                    temp.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            myList = temp.ToArray();
         }
 
 
